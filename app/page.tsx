@@ -138,7 +138,9 @@ function GrowthField() {
 // ── Merch ────────────────────────────────────────────────────────────────────
 function Merch() {
   const topRef = useRef<HTMLDivElement>(null);
+  const cartRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
+  const prevCartLen = useRef(0);
   const [cart, setCart] = useState<any[]>([]);
   const [selections, setSelections] = useState<Record<string, { fit: string; size: string }>>(
     Object.fromEntries(SHIRTS.map(s => [s.id, { fit: 'Herren', size: 'M' }]))
@@ -155,6 +157,14 @@ function Merch() {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [checkoutOpen, orderResult]);
+
+  useEffect(() => {
+    if (cart.length > prevCartLen.current) {
+      // kurz warten bis der Warenkorb im DOM steht, dann sanft dorthin ziehen
+      setTimeout(() => cartRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+    }
+    prevCartLen.current = cart.length;
+  }, [cart]);
 
   const updateSelection = (id: string, patch: Partial<{ fit: string; size: string }>) =>
     setSelections(s => ({ ...s, [id]: { ...s[id], ...patch } }));
@@ -298,7 +308,7 @@ function Merch() {
           </div>
 
           {cart.length > 0 && (
-            <div style={{ marginTop: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 20 }}>
+            <div ref={cartRef} style={{ marginTop: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 20, scrollMarginTop: 80 }}>
               <div style={{ fontWeight: 700, marginBottom: 12 }}>Cart</div>
               {cart.map((i, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
