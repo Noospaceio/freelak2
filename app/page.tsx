@@ -103,7 +103,7 @@ function GrowthField() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }} />;
 }
 
-// ── Nav with Logo ───────────────────────────────────────────────────────────
+// ── Nav with small Logo ─────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -137,7 +137,7 @@ function Nav() {
           <img 
             src="/logo.png" 
             alt="FreeLakito Logo" 
-            style={{ height: 42, width: 'auto' }} 
+            style={{ height: 38, width: 'auto' }} 
           />
         </button>
         <div className="fl-nav-desktop" style={{ display: 'flex', gap: 4 }}>
@@ -213,21 +213,37 @@ export default function FreeLakito() {
       <div style={{ background: '#060a06', color: '#eee', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', paddingTop: 56 }}>
         <Nav />
 
-        {/* ── Hero ─────────────────────────────────────────────────────── */}
+        {/* ── Hero with big Logo ─────────────────────────────────────────────── */}
         <section style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', padding: '96px 20px 80px' }}>
           <GrowthField />
           <motion.div style={{ position: 'relative', zIndex: 1 }}
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+
+            {/* Großes Logo */}
+            <div style={{ marginBottom: 32 }}>
+              <img 
+                src="/logo.png" 
+                alt="FreeLakito Logo" 
+                style={{ 
+                  maxWidth: '480px', 
+                  width: '92%', 
+                  height: 'auto', 
+                  filter: 'drop-shadow(0 15px 40px rgba(62,207,106,0.35))' 
+                }} 
+              />
+            </div>
+
             <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 18 }}>
               LAUNCHED FROM OPEN PRISON · SOLANA
             </div>
             <h1 style={{ fontSize: 'clamp(2.4rem, 6vw, 4.2rem)', fontWeight: 800, lineHeight: 1.05, marginBottom: 20 }}>
-              🌿 {TICKER}
+              {TICKER}
             </h1>
             <p style={{ maxWidth: 560, margin: '0 auto', fontSize: 18, color: '#aaa', lineHeight: 1.6 }}>
               A meme coin with a real story behind it. One guy, one phone, one chance — smuggled from
               behind the wall of an open prison after a cannabis conviction.
             </p>
+
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 36, flexWrap: 'wrap' }}>
               <motion.a href={BUY_LINK} target="_blank" rel="noreferrer" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
                 style={{ background: 'linear-gradient(135deg,#3ecf6a,#2a9950)', color: '#04220f', fontWeight: 800,
