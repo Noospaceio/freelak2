@@ -8,8 +8,8 @@ const TOTAL_SUPPLY   = '22,222';
 const CONTRACT_ADDR  = 'J1fL9JCSczPdRqcsAEkxUdB8Npx8cAuJsbZdwR74zmtG';
 const BUY_LINK       = `https://jup.ag/swap/SOL-${CONTRACT_ADDR}`;
 const DEXSCREENER    = `https://dexscreener.com/solana/${CONTRACT_ADDR}`;
-const X_LINK         = 'https://x.com/freelakito';
-const TG_LINK        = 'https://t.me/freelakito';
+const X_LINK         = 'https://x.com/MoldySaltyChees';
+const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
 
 // ── Copy-to-clipboard hook ──────────────────────────────────────────────────
 function useCopy() {
