@@ -103,7 +103,7 @@ function GrowthField() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }} />;
 }
 
-// ── Nav with small Logo ─────────────────────────────────────────────────────
+// ── Nav ─────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -213,22 +213,22 @@ export default function FreeLakito() {
       <div style={{ background: '#060a06', color: '#eee', minHeight: '100vh', fontFamily: 'system-ui, sans-serif', paddingTop: 56 }}>
         <Nav />
 
-        {/* ── Hero with big Logo ─────────────────────────────────────────────── */}
+        {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section style={{ position: 'relative', overflow: 'hidden', textAlign: 'center', padding: '96px 20px 80px' }}>
           <GrowthField />
           <motion.div style={{ position: 'relative', zIndex: 1 }}
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
 
-            {/* Großes Logo */}
-            <div style={{ marginBottom: 32 }}>
+            {/* Großes Logo genau hier */}
+            <div style={{ marginBottom: 28 }}>
               <img 
                 src="/logo.png" 
                 alt="FreeLakito Logo" 
                 style={{ 
-                  maxWidth: '480px', 
-                  width: '92%', 
+                  maxWidth: '460px', 
+                  width: '88%', 
                   height: 'auto', 
-                  filter: 'drop-shadow(0 15px 40px rgba(62,207,106,0.35))' 
+                  filter: 'drop-shadow(0 12px 35px rgba(62,207,106,0.4))' 
                 }} 
               />
             </div>
@@ -272,7 +272,7 @@ export default function FreeLakito() {
           </motion.div>
         </section>
 
-        {/* ── Stats ────────────────────────────────────────────────────── */}
+        {/* ── Stats, Story, Tokenomics, Buy, Footer bleiben gleich ───────────── */}
         <motion.section {...fadeUp} style={{ padding: '20px 20px 70px' }}>
           <div style={{ maxWidth: 780, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 14 }}>
             {[
@@ -292,7 +292,7 @@ export default function FreeLakito() {
           </div>
         </motion.section>
 
-        {/* ── Story ────────────────────────────────────────────────────── */}
+        {/* Story, Tokenomics, Buy und Footer sind unverändert */}
         <motion.section id="story" {...fadeUp} style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 14 }}>
             THE STORY
@@ -322,7 +322,6 @@ export default function FreeLakito() {
           </p>
         </motion.section>
 
-        {/* ── Tokenomics ───────────────────────────────────────────────── */}
         <motion.section id="tokenomics" {...fadeUp} style={{ background: 'rgba(255,255,255,0.02)', padding: '70px 24px' }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 14, textAlign: 'center' }}>
@@ -348,7 +347,6 @@ export default function FreeLakito() {
           </div>
         </motion.section>
 
-        {/* ── Buy ──────────────────────────────────────────────────────── */}
         <motion.section id="buy" {...fadeUp} style={{ maxWidth: 620, margin: '0 auto', padding: '70px 24px', textAlign: 'center' }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 30 }}>How to buy {TICKER}</h2>
           <div style={{ display: 'grid', gap: 14, textAlign: 'left' }}>
@@ -374,7 +372,6 @@ export default function FreeLakito() {
           </motion.a>
         </motion.section>
 
-        {/* ── Socials + Footer ────────────────────────────────────────── */}
         <footer style={{ textAlign: 'center', padding: '50px 20px 40px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 20 }}>
             <a href={X_LINK} target="_blank" rel="noreferrer" style={{ color: '#3ecf6a', textDecoration: 'none', fontFamily: 'monospace', fontSize: 13 }}>X / Twitter</a>
