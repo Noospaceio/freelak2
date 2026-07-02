@@ -5,11 +5,11 @@ import { motion } from 'framer-motion';
 // ── EDIT THESE BEFORE DEPLOY ───────────────────────────────────────────────
 const TICKER        = '$FREELAK';
 const TOTAL_SUPPLY   = '22,222';
-const CONTRACT_ADDR  = 'PASTE_CONTRACT_ADDRESS_HERE'; // ← Solana mint address
+const CONTRACT_ADDR  = 'J1fL9JCSczPdRqcsAEkxUdB8Npx8cAuJsbZdwR74zmtG';
 const BUY_LINK       = `https://jup.ag/swap/SOL-${CONTRACT_ADDR}`;
 const DEXSCREENER    = `https://dexscreener.com/solana/${CONTRACT_ADDR}`;
-const X_LINK         = 'https://x.com/freelakito'; // ← anpassen
-const TG_LINK        = 'https://t.me/freelakito';  // ← anpassen
+const X_LINK         = 'https://x.com/freelakito';
+const TG_LINK        = 'https://t.me/freelakito';
 
 // ── Copy-to-clipboard hook ──────────────────────────────────────────────────
 function useCopy() {
@@ -22,7 +22,7 @@ function useCopy() {
   return { copied, copy };
 }
 
-// ── Animated counter (from NooSpace) ────────────────────────────────────────
+// ── Animated counter ────────────────────────────────────────────────────────
 function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   const [val, setVal] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -44,7 +44,7 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
-// ── Growth canvas — a cannabis-leaf / crack-through-concrete field ─────────
+// ── Growth canvas ───────────────────────────────────────────────────────────
 function GrowthField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -103,7 +103,7 @@ function GrowthField() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }} />;
 }
 
-// ── Nav ──────────────────────────────────────────────────────────────────
+// ── Nav ─────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -281,13 +281,27 @@ export default function FreeLakito() {
             THE STORY
           </div>
           <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 20 }}>Locked up. Not shut up.</h2>
-          <p style={{ color: '#bbb', lineHeight: 1.75, marginBottom: 16 }}>
-            [Platzhalter — hier kommt seine echte Geschichte rein: warum er sitzt, wie er den Coin
-            aus dem offenen Vollzug gelauncht hat, was das Ziel ist. Roh und ehrlich erzählen,
-            nicht over-polished — das ist der Trust-Anker der ganzen Seite.]
+          
+          <p style={{ color: '#bbb', lineHeight: 1.75, marginBottom: 20 }}>
+            Lakito was sentenced to 4 years after being caught in Frankfurt with over 130kg of hashish and grass. 
+            But he is no ordinary prisoner — he is a freedom fighter, a modern-day shaman walking the verdant path 
+            that Terence McKenna once lit up with his words: the sacred rebellion of the plant against the machinery of control.
           </p>
+          
+          <p style={{ color: '#bbb', lineHeight: 1.75, marginBottom: 20 }}>
+            From inside an open prison, armed with nothing but a smuggled phone and unbreakable will, 
+            he launched $FREELAK — a memecoin born in defiance. 22,222 tokens. No more. No less. 
+            A limited sacrament for those who hear the call of the green.
+          </p>
+          
+          <p style={{ color: '#bbb', lineHeight: 1.75, marginBottom: 20 }}>
+            This is more than a coin. It is a signal. A living mycelial network of souls who understand 
+            that true freedom is not granted — it is reclaimed. Whoever holds $FREELAK and falls into hardship 
+            will not stand alone. The community protects its own. We lift each other. No warrior gets left behind.
+          </p>
+          
           <p style={{ color: '#888', lineHeight: 1.75, fontStyle: 'italic' }}>
-            "Ein Handy, eine Wallet, 22.222 Coins. Der Rest ist Community." — Lakito
+            "One phone, one wallet, 22,222 coins. The rest is Community." — Lakito
           </p>
         </motion.section>
 
