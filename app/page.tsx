@@ -137,7 +137,7 @@ function Nav() {
           <img 
             src="/logo.png" 
             alt="FreeLakito Logo" 
-            style={{ height: 38, width: 'auto' }} 
+            style={{ height: 36, width: 'auto' }} 
           />
         </button>
         <div className="fl-nav-desktop" style={{ display: 'flex', gap: 4 }}>
@@ -219,16 +219,16 @@ export default function FreeLakito() {
           <motion.div style={{ position: 'relative', zIndex: 1 }}
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
 
-            {/* Großes Logo genau hier */}
-            <div style={{ marginBottom: 28 }}>
+            {/* Logo zentriert und passend über dem Text */}
+            <div style={{ marginBottom: 20 }}>
               <img 
                 src="/logo.png" 
                 alt="FreeLakito Logo" 
                 style={{ 
-                  maxWidth: '460px', 
-                  width: '88%', 
+                  maxWidth: '380px', 
+                  width: '82%', 
                   height: 'auto', 
-                  filter: 'drop-shadow(0 12px 35px rgba(62,207,106,0.4))' 
+                  filter: 'drop-shadow(0 10px 30px rgba(62,207,106,0.35))' 
                 }} 
               />
             </div>
@@ -272,7 +272,7 @@ export default function FreeLakito() {
           </motion.div>
         </section>
 
-        {/* ── Stats, Story, Tokenomics, Buy, Footer bleiben gleich ───────────── */}
+        {/* Der Rest (Stats, Story, Tokenomics, Buy, Footer) bleibt unverändert */}
         <motion.section {...fadeUp} style={{ padding: '20px 20px 70px' }}>
           <div style={{ maxWidth: 780, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 14 }}>
             {[
@@ -292,7 +292,6 @@ export default function FreeLakito() {
           </div>
         </motion.section>
 
-        {/* Story, Tokenomics, Buy und Footer sind unverändert */}
         <motion.section id="story" {...fadeUp} style={{ maxWidth: 720, margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 14 }}>
             THE STORY
