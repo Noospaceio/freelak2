@@ -220,14 +220,15 @@ export default function FreeLakito() {
             initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
 
             {/* Logo zentriert und passend über dem Text */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
               <img 
                 src="/logo.png" 
                 alt="FreeLakito Logo" 
                 style={{ 
-                  maxWidth: '380px', 
-                  width: '82%', 
+                  maxWidth: '180px', 
+                  width: '40%', 
                   height: 'auto', 
+                  margin: '0 auto',
                   filter: 'drop-shadow(0 10px 30px rgba(62,207,106,0.35))' 
                 }} 
               />
