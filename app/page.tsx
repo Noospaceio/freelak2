@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { createClient } from '@supabase/supabase-js';
 
 // ── EDIT THESE BEFORE DEPLOY ───────────────────────────────────────────────
 const TICKER        = '$FREELAK';
@@ -8,8 +9,39 @@ const TOTAL_SUPPLY   = '22,222';
 const CONTRACT_ADDR  = 'J1fL9JCSczPdRqcsAEkxUdB8Npx8cAuJsbZdwR74zmtG';
 const BUY_LINK       = `https://jup.ag/swap/SOL-${CONTRACT_ADDR}`;
 const DEXSCREENER    = `https://dexscreener.com/solana/${CONTRACT_ADDR}`;
-const X_LINK         = 'https://x.com/FREELAKITO';
-const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
+const X_LINK         = 'https://x.com/freelakito';
+const TG_LINK        = 'https://t.me/freelakito';
+
+// ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
+const SHIRT_PRICE_EUR = 25;          // Basispreis pro Shirt
+const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme
+const SOL_EUR_RATE = 65;             // grober Kurs für Anzeige, KEIN Live-Feed — bei Bedarf anpassen
+const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen
+const IBAN_HOLDER     = 'Vorname Nachname';             // ← Kontoinhaber eintragen
+const SOL_WALLET      = 'DEINE_SOL_WALLET_ADRESSE';      // ← Treasury-Wallet für SOL-Zahlungen
+const FREELAK_WALLET  = 'DEINE_FREELAK_TOKEN_ADRESSE';   // ← Wallet/Token-Account für $FREELAK-Zahlungen
+
+const SHIRTS = [
+  { id: 'shirt-1', name: 'Prison Break', img: '/merch/shirt-1.png', price: SHIRT_PRICE_EUR },
+  { id: 'shirt-2', name: 'Free the Plant', img: '/merch/shirt-2.png', price: SHIRT_PRICE_EUR },
+  { id: 'shirt-3', name: 'Mycelial Network', img: '/merch/shirt-3.png', price: SHIRT_PRICE_EUR },
+  { id: 'shirt-4', name: 'Sacred Rebellion', img: '/merch/shirt-4.png', price: SHIRT_PRICE_EUR },
+];
+const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+const FITS = ['Herren', 'Damen'];
+
+// ── Supabase-Client ─────────────────────────────────────────────────────────
+// Erwartet ENV-Variablen NEXT_PUBLIC_SUPABASE_URL & NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabase =
+  typeof window !== 'undefined' &&
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    : null;
+
+function makeOrderRef() {
+  return 'FL-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
 
 // ── Copy-to-clipboard hook ──────────────────────────────────────────────────
 function useCopy() {
@@ -103,6 +135,258 @@ function GrowthField() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }} />;
 }
 
+// ── Merch ────────────────────────────────────────────────────────────────────
+function Merch() {
+  const [cart, setCart] = useState<any[]>([]);
+  const [selections, setSelections] = useState<Record<string, { fit: string; size: string }>>(
+    Object.fromEntries(SHIRTS.map(s => [s.id, { fit: 'Herren', size: 'M' }]))
+  );
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [payment, setPayment] = useState<'ueberweisung' | 'krypto' | 'nachnahme'>('ueberweisung');
+  const [kryptoCoin, setKryptoCoin] = useState<'SOL' | 'FREELAK'>('SOL');
+  const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [orderResult, setOrderResult] = useState<{ ref: string } | null>(null);
+  const [error, setError] = useState('');
+
+  const updateSelection = (id: string, patch: Partial<{ fit: string; size: string }>) =>
+    setSelections(s => ({ ...s, [id]: { ...s[id], ...patch } }));
+
+  const addToCart = (shirt: typeof SHIRTS[number]) => {
+    const sel = selections[shirt.id];
+    setCart(c => {
+      const idx = c.findIndex(i => i.shirtId === shirt.id && i.fit === sel.fit && i.size === sel.size);
+      if (idx >= 0) {
+        const next = [...c];
+        next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
+        return next;
+      }
+      return [...c, { shirtId: shirt.id, name: shirt.name, fit: sel.fit, size: sel.size, price: shirt.price, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (i: number) => setCart(c => c.filter((_, idx) => idx !== i));
+
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const nachnahmeFee = payment === 'nachnahme' ? NACHNAHME_FEE_EUR : 0;
+  const total = subtotal + nachnahmeFee;
+  const totalSol = (total / SOL_EUR_RATE).toFixed(3);
+
+  const canSubmit = form.name && form.street && form.zip && form.city && form.email &&
+    (payment !== 'nachnahme' || form.phone) && cart.length > 0;
+
+  const submitOrder = async () => {
+    if (!canSubmit) { setError('Bitte alle Pflichtfelder ausfüllen.'); return; }
+    setSubmitting(true);
+    setError('');
+    const ref = makeOrderRef();
+    try {
+      if (supabase) {
+        const { error: dbError } = await supabase.from('orders').insert({
+          order_ref: ref,
+          items: cart,
+          name: form.name,
+          street: form.street,
+          zip: form.zip,
+          city: form.city,
+          country: form.country,
+          email: form.email,
+          phone: form.phone,
+          payment_method: payment,
+          payment_currency: payment === 'krypto' ? kryptoCoin : null,
+          payment_status: 'pending',
+          total_amount: total,
+        });
+        if (dbError) throw dbError;
+      }
+      setOrderResult({ ref });
+      setCart([]);
+    } catch (e) {
+      setError('Da ist was schiefgelaufen. Versuch es nochmal oder melde dich direkt über X/Telegram.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (orderResult) {
+    return (
+      <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 14 }}>✓</div>
+        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10 }}>Bestellung eingegangen</h3>
+        <p style={{ color: '#aaa', marginBottom: 24 }}>
+          Deine Bestellnummer: <strong style={{ color: '#3ecf6a', fontFamily: 'monospace' }}>{orderResult.ref}</strong><br />
+          Bestätigung geht an deine E-Mail-Adresse.
+        </p>
+
+        {payment === 'ueberweisung' && (
+          <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
+            <div><strong>IBAN:</strong> {IBAN}</div>
+            <div><strong>Empfänger:</strong> {IBAN_HOLDER}</div>
+            <div><strong>Betrag:</strong> {total.toFixed(2)}€</div>
+            <div><strong>Verwendungszweck:</strong> {orderResult.ref}</div>
+            <div style={{ color: '#888', marginTop: 8 }}>Bitte unbedingt die Bestellnummer als Verwendungszweck angeben, sonst können wir die Zahlung nicht zuordnen.</div>
+          </div>
+        )}
+
+        {payment === 'krypto' && (
+          <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
+            <div><strong>Zahlung in:</strong> {kryptoCoin}</div>
+            <div style={{ wordBreak: 'break-all' }}><strong>Adresse:</strong> {kryptoCoin === 'SOL' ? SOL_WALLET : FREELAK_WALLET}</div>
+            {kryptoCoin === 'SOL' && <div><strong>Ungefährer Betrag:</strong> ~{totalSol} SOL (Kurs schwankt, gerne aktuellen Kurs selbst prüfen)</div>}
+            <div style={{ color: '#888', marginTop: 8 }}>Schick uns nach der Zahlung kurz einen Screenshot mit Bestellnummer {orderResult.ref} über X oder Telegram, damit wir's schnell zuordnen können.</div>
+          </div>
+        )}
+
+        {payment === 'nachnahme' && (
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
+            <div>Nichts weiter zu tun — du zahlst <strong>{total.toFixed(2)}€</strong> (inkl. {NACHNAHME_FEE_EUR}€ Nachnahme-Gebühr) bar beim Zusteller.</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {!checkoutOpen ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20 }}>
+            {SHIRTS.map(shirt => {
+              const sel = selections[shirt.id];
+              return (
+                <div key={shirt.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 16 }}>
+                  <div style={{ width: '100%', aspectRatio: '1', background: 'rgba(255,255,255,0.04)', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+                    <img src={shirt.img} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>{shirt.name}</div>
+                  <div style={{ color: '#3ecf6a', fontFamily: 'monospace', fontWeight: 700, marginBottom: 12 }}>{shirt.price}€</div>
+
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                    {FITS.map(f => (
+                      <button key={f} onClick={() => updateSelection(shirt.id, { fit: f })} style={{
+                        flex: 1, padding: '6px 0', fontSize: 11, borderRadius: 8, cursor: 'pointer',
+                        border: `1px solid ${sel.fit === f ? '#3ecf6a' : 'rgba(255,255,255,0.15)'}`,
+                        background: sel.fit === f ? 'rgba(62,207,106,0.12)' : 'transparent',
+                        color: sel.fit === f ? '#3ecf6a' : '#999',
+                      }}>{f}</button>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
+                    {SIZES.map(sz => (
+                      <button key={sz} onClick={() => updateSelection(shirt.id, { size: sz })} style={{
+                        width: 34, height: 30, fontSize: 11, borderRadius: 6, cursor: 'pointer',
+                        border: `1px solid ${sel.size === sz ? '#d4af37' : 'rgba(255,255,255,0.15)'}`,
+                        background: sel.size === sz ? 'rgba(212,175,55,0.15)' : 'transparent',
+                        color: sel.size === sz ? '#d4af37' : '#999',
+                      }}>{sz}</button>
+                    ))}
+                  </div>
+                  <button onClick={() => addToCart(shirt)} style={{
+                    width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    background: 'rgba(62,207,106,0.15)', color: '#3ecf6a', fontWeight: 700, fontSize: 13,
+                  }}>In den Warenkorb</button>
+                </div>
+              );
+            })}
+          </div>
+
+          {cart.length > 0 && (
+            <div style={{ marginTop: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 20 }}>
+              <div style={{ fontWeight: 700, marginBottom: 12 }}>Warenkorb</div>
+              {cart.map((i, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
+                  <span>{i.qty}× {i.name} ({i.fit}, {i.size})</span>
+                  <span style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <span style={{ color: '#3ecf6a', fontFamily: 'monospace' }}>{(i.price * i.qty).toFixed(2)}€</span>
+                    <button onClick={() => removeFromCart(idx)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer' }}>✕</button>
+                  </span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, fontWeight: 700 }}>
+                <span>Zwischensumme</span>
+                <span>{subtotal.toFixed(2)}€</span>
+              </div>
+              <button onClick={() => setCheckoutOpen(true)} style={{
+                width: '100%', marginTop: 16, padding: '13px 0', borderRadius: 999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg,#3ecf6a,#2a9950)', color: '#04220f', fontWeight: 800, fontSize: 15,
+              }}>Zur Kasse →</button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ maxWidth: 480, margin: '0 auto' }}>
+          <button onClick={() => setCheckoutOpen(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', marginBottom: 16, fontSize: 13 }}>← zurück</button>
+
+          <div style={{ display: 'grid', gap: 10, marginBottom: 20 }}>
+            {[
+              ['name', 'Name*'], ['street', 'Straße + Hausnummer*'], ['zip', 'PLZ*'], ['city', 'Stadt*'],
+              ['country', 'Land*'], ['email', 'E-Mail*'], ['phone', `Telefon${payment === 'nachnahme' ? '*' : ' (optional)'}`],
+            ].map(([key, label]) => (
+              <input key={key} placeholder={label} value={(form as any)[key]}
+                onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                style={{ padding: '11px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.03)', color: '#eee', fontSize: 14 }} />
+            ))}
+          </div>
+
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>ZAHLUNGSMETHODE</div>
+          <div style={{ display: 'grid', gap: 8, marginBottom: 20 }}>
+            {[
+              { id: 'ueberweisung', label: 'SEPA-Überweisung' },
+              { id: 'krypto', label: 'Krypto (SOL oder $FREELAK)' },
+              { id: 'nachnahme', label: `Nachnahme (+${NACHNAHME_FEE_EUR}€ Gebühr)` },
+            ].map(p => (
+              <label key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
+                border: `1px solid ${payment === p.id ? '#3ecf6a' : 'rgba(255,255,255,0.12)'}`,
+                background: payment === p.id ? 'rgba(62,207,106,0.08)' : 'transparent', fontSize: 14,
+              }}>
+                <input type="radio" checked={payment === p.id} onChange={() => setPayment(p.id as any)} />
+                {p.label}
+              </label>
+            ))}
+          </div>
+
+          {payment === 'krypto' && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+              {(['SOL', 'FREELAK'] as const).map(c => (
+                <button key={c} onClick={() => setKryptoCoin(c)} style={{
+                  flex: 1, padding: '9px 0', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                  border: `1px solid ${kryptoCoin === c ? '#d4af37' : 'rgba(255,255,255,0.15)'}`,
+                  background: kryptoCoin === c ? 'rgba(212,175,55,0.12)' : 'transparent',
+                  color: kryptoCoin === c ? '#d4af37' : '#999',
+                }}>{c === 'SOL' ? 'SOL' : TICKER}</button>
+              ))}
+            </div>
+          )}
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, marginBottom: 18 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
+              <span>Zwischensumme</span><span>{subtotal.toFixed(2)}€</span>
+            </div>
+            {payment === 'nachnahme' && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
+                <span>Nachnahme-Gebühr</span><span>+{NACHNAHME_FEE_EUR.toFixed(2)}€</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 17, marginTop: 6 }}>
+              <span>Gesamt</span><span style={{ color: '#3ecf6a' }}>{total.toFixed(2)}€</span>
+            </div>
+          </div>
+
+          {error && <div style={{ color: '#ff6b6b', fontSize: 13, marginBottom: 12 }}>{error}</div>}
+
+          <button onClick={submitOrder} disabled={submitting} style={{
+            width: '100%', padding: '14px 0', borderRadius: 999, border: 'none', cursor: submitting ? 'default' : 'pointer',
+            background: 'linear-gradient(135deg,#3ecf6a,#2a9950)', color: '#04220f', fontWeight: 800, fontSize: 15,
+            opacity: submitting ? 0.6 : 1,
+          }}>{submitting ? 'Wird gesendet…' : 'Bestellung abschicken'}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Nav ─────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -115,6 +399,7 @@ function Nav() {
   const links = [
     { id: 'story', label: 'Story' },
     { id: 'tokenomics', label: 'Tokenomics' },
+    { id: 'merch', label: 'Merch' },
     { id: 'buy', label: 'Buy' },
   ];
   const scrollTo = (id: string) => {
@@ -345,6 +630,16 @@ export default function FreeLakito() {
               ))}
             </div>
           </div>
+        </motion.section>
+
+        <motion.section id="merch" {...fadeUp} style={{ padding: '70px 24px' }}>
+          <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 14, textAlign: 'center' }}>
+            MERCH
+          </div>
+          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 30, textAlign: 'center' }}>
+            Wear the rebellion
+          </h2>
+          <Merch />
         </motion.section>
 
         <motion.section id="buy" {...fadeUp} style={{ maxWidth: 620, margin: '0 auto', padding: '70px 24px', textAlign: 'center' }}>
