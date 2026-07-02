@@ -35,8 +35,8 @@ const FITS = ['Herren', 'Damen'];
 const supabase =
   typeof window !== 'undefined' &&
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
     : null;
 
 function makeOrderRef() {
