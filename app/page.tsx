@@ -137,6 +137,8 @@ function GrowthField() {
 
 // ── Merch ────────────────────────────────────────────────────────────────────
 function Merch() {
+  const topRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
   const [cart, setCart] = useState<any[]>([]);
   const [selections, setSelections] = useState<Record<string, { fit: string; size: string }>>(
     Object.fromEntries(SHIRTS.map(s => [s.id, { fit: 'Herren', size: 'M' }]))
@@ -148,6 +150,11 @@ function Merch() {
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<{ ref: string } | null>(null);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [checkoutOpen, orderResult]);
 
   const updateSelection = (id: string, patch: Partial<{ fit: string; size: string }>) =>
     setSelections(s => ({ ...s, [id]: { ...s[id], ...patch } }));
@@ -176,7 +183,7 @@ function Merch() {
     (payment !== 'nachnahme' || form.phone) && cart.length > 0;
 
   const submitOrder = async () => {
-    if (!canSubmit) { setError('Bitte alle Pflichtfelder ausfüllen.'); return; }
+    if (!canSubmit) { setError('Please fill in all required fields.'); return; }
     setSubmitting(true);
     setError('');
     const ref = makeOrderRef();
@@ -202,7 +209,7 @@ function Merch() {
       setOrderResult({ ref });
       setCart([]);
     } catch (e) {
-      setError('Da ist was schiefgelaufen. Versuch es nochmal oder melde dich direkt über X/Telegram.');
+      setError('Something went wrong. Please try again or reach out directly on X/Telegram.');
     } finally {
       setSubmitting(false);
     }
@@ -210,36 +217,36 @@ function Merch() {
 
   if (orderResult) {
     return (
-      <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center' }}>
+      <div ref={topRef} style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', scrollMarginTop: 80 }}>
         <div style={{ fontSize: 40, marginBottom: 14 }}>✓</div>
-        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10 }}>Bestellung eingegangen</h3>
+        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10 }}>Order received</h3>
         <p style={{ color: '#aaa', marginBottom: 24 }}>
-          Deine Bestellnummer: <strong style={{ color: '#3ecf6a', fontFamily: 'monospace' }}>{orderResult.ref}</strong><br />
-          Bestätigung geht an deine E-Mail-Adresse.
+          Your order number: <strong style={{ color: '#3ecf6a', fontFamily: 'monospace' }}>{orderResult.ref}</strong><br />
+          A confirmation will be sent to your email.
         </p>
 
         {payment === 'ueberweisung' && (
           <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
             <div><strong>IBAN:</strong> {IBAN}</div>
-            <div><strong>Empfänger:</strong> {IBAN_HOLDER}</div>
-            <div><strong>Betrag:</strong> {total.toFixed(2)}€</div>
-            <div><strong>Verwendungszweck:</strong> {orderResult.ref}</div>
-            <div style={{ color: '#888', marginTop: 8 }}>Bitte unbedingt die Bestellnummer als Verwendungszweck angeben, sonst können wir die Zahlung nicht zuordnen.</div>
+            <div><strong>Recipient:</strong> {IBAN_HOLDER}</div>
+            <div><strong>Amount:</strong> €{total.toFixed(2)}</div>
+            <div><strong>Reference:</strong> {orderResult.ref}</div>
+            <div style={{ color: '#888', marginTop: 8 }}>Please make sure to include the order number as the payment reference — otherwise we can't match your payment.</div>
           </div>
         )}
 
         {payment === 'krypto' && (
           <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
-            <div><strong>Zahlung in:</strong> {kryptoCoin}</div>
-            <div style={{ wordBreak: 'break-all' }}><strong>Adresse:</strong> {kryptoCoin === 'SOL' ? SOL_WALLET : FREELAK_WALLET}</div>
-            {kryptoCoin === 'SOL' && <div><strong>Ungefährer Betrag:</strong> ~{totalSol} SOL (Kurs schwankt, gerne aktuellen Kurs selbst prüfen)</div>}
-            <div style={{ color: '#888', marginTop: 8 }}>Schick uns nach der Zahlung kurz einen Screenshot mit Bestellnummer {orderResult.ref} über X oder Telegram, damit wir's schnell zuordnen können.</div>
+            <div><strong>Paying in:</strong> {kryptoCoin}</div>
+            <div style={{ wordBreak: 'break-all' }}><strong>Address:</strong> {kryptoCoin === 'SOL' ? SOL_WALLET : FREELAK_WALLET}</div>
+            {kryptoCoin === 'SOL' && <div><strong>Approx. amount:</strong> ~{totalSol} SOL (rate fluctuates — feel free to double-check the current price)</div>}
+            <div style={{ color: '#888', marginTop: 8 }}>After paying, send us a screenshot with order number {orderResult.ref} via X or Telegram so we can match it quickly.</div>
           </div>
         )}
 
         {payment === 'nachnahme' && (
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
-            <div>Nichts weiter zu tun — du zahlst <strong>{total.toFixed(2)}€</strong> (inkl. {NACHNAHME_FEE_EUR}€ Nachnahme-Gebühr) bar beim Zusteller.</div>
+            <div>Nothing else to do — you pay <strong>€{total.toFixed(2)}</strong> (incl. €{NACHNAHME_FEE_EUR} COD fee) in cash to the courier.</div>
           </div>
         )}
       </div>
@@ -247,7 +254,7 @@ function Merch() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+    <div ref={topRef} style={{ maxWidth: 900, margin: '0 auto', scrollMarginTop: 80 }}>
       {!checkoutOpen ? (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20 }}>
@@ -284,7 +291,7 @@ function Merch() {
                   <button onClick={() => addToCart(shirt)} style={{
                     width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
                     background: 'rgba(62,207,106,0.15)', color: '#3ecf6a', fontWeight: 700, fontSize: 13,
-                  }}>In den Warenkorb</button>
+                  }}>Add to cart</button>
                 </div>
               );
             })}
@@ -292,7 +299,7 @@ function Merch() {
 
           {cart.length > 0 && (
             <div style={{ marginTop: 30, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 12 }}>Warenkorb</div>
+              <div style={{ fontWeight: 700, marginBottom: 12 }}>Cart</div>
               {cart.map((i, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
                   <span>{i.qty}× {i.name} ({i.fit}, {i.size})</span>
@@ -303,24 +310,24 @@ function Merch() {
                 </div>
               ))}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, fontWeight: 700 }}>
-                <span>Zwischensumme</span>
-                <span>{subtotal.toFixed(2)}€</span>
+                <span>Subtotal</span>
+                <span>€{subtotal.toFixed(2)}</span>
               </div>
               <button onClick={() => setCheckoutOpen(true)} style={{
                 width: '100%', marginTop: 16, padding: '13px 0', borderRadius: 999, border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg,#3ecf6a,#2a9950)', color: '#04220f', fontWeight: 800, fontSize: 15,
-              }}>Zur Kasse →</button>
+              }}>Checkout →</button>
             </div>
           )}
         </>
       ) : (
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
-          <button onClick={() => setCheckoutOpen(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', marginBottom: 16, fontSize: 13 }}>← zurück</button>
+          <button onClick={() => setCheckoutOpen(false)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', marginBottom: 16, fontSize: 13 }}>← back</button>
 
           <div style={{ display: 'grid', gap: 10, marginBottom: 20 }}>
             {[
-              ['name', 'Name*'], ['street', 'Straße + Hausnummer*'], ['zip', 'PLZ*'], ['city', 'Stadt*'],
-              ['country', 'Land*'], ['email', 'E-Mail*'], ['phone', `Telefon${payment === 'nachnahme' ? '*' : ' (optional)'}`],
+              ['name', 'Name*'], ['street', 'Street + house number*'], ['zip', 'ZIP code*'], ['city', 'City*'],
+              ['country', 'Country*'], ['email', 'Email*'], ['phone', `Phone${payment === 'nachnahme' ? '*' : ' (optional)'}`],
             ].map(([key, label]) => (
               <input key={key} placeholder={label} value={(form as any)[key]}
                 onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
@@ -329,12 +336,12 @@ function Merch() {
             ))}
           </div>
 
-          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>ZAHLUNGSMETHODE</div>
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>PAYMENT METHOD</div>
           <div style={{ display: 'grid', gap: 8, marginBottom: 20 }}>
             {[
-              { id: 'ueberweisung', label: 'SEPA-Überweisung' },
-              { id: 'krypto', label: 'Krypto (SOL oder $FREELAK)' },
-              { id: 'nachnahme', label: `Nachnahme (+${NACHNAHME_FEE_EUR}€ Gebühr)` },
+              { id: 'ueberweisung', label: 'Bank transfer (SEPA)' },
+              { id: 'krypto', label: 'Crypto (SOL or $FREELAK)' },
+              { id: 'nachnahme', label: `Cash on delivery (+€${NACHNAHME_FEE_EUR} fee)` },
             ].map(p => (
               <label key={p.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
@@ -362,15 +369,15 @@ function Merch() {
 
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, marginBottom: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
-              <span>Zwischensumme</span><span>{subtotal.toFixed(2)}€</span>
+              <span>Subtotal</span><span>€{subtotal.toFixed(2)}</span>
             </div>
             {payment === 'nachnahme' && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
-                <span>Nachnahme-Gebühr</span><span>+{NACHNAHME_FEE_EUR.toFixed(2)}€</span>
+                <span>COD fee</span><span>+€{NACHNAHME_FEE_EUR.toFixed(2)}</span>
               </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 17, marginTop: 6 }}>
-              <span>Gesamt</span><span style={{ color: '#3ecf6a' }}>{total.toFixed(2)}€</span>
+              <span>Total</span><span style={{ color: '#3ecf6a' }}>€{total.toFixed(2)}</span>
             </div>
           </div>
 
@@ -380,7 +387,7 @@ function Merch() {
             width: '100%', padding: '14px 0', borderRadius: 999, border: 'none', cursor: submitting ? 'default' : 'pointer',
             background: 'linear-gradient(135deg,#3ecf6a,#2a9950)', color: '#04220f', fontWeight: 800, fontSize: 15,
             opacity: submitting ? 0.6 : 1,
-          }}>{submitting ? 'Wird gesendet…' : 'Bestellung abschicken'}</button>
+          }}>{submitting ? 'Sending…' : 'Place order'}</button>
         </div>
       )}
     </div>
