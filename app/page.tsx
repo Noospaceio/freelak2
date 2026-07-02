@@ -103,7 +103,7 @@ function GrowthField() {
   return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.55 }} />;
 }
 
-// ── Nav ─────────────────────────────────────────────────────────────────────
+// ── Nav with Logo ───────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -133,11 +133,12 @@ function Nav() {
         transition: 'background 0.35s, border-color 0.35s',
       }}>
         <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 18 }}>🌿</span>
-          <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 13, color: '#3ecf6a', letterSpacing: '0.18em' }}>
-            FREELAKITO
-          </span>
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img 
+            src="/logo.png" 
+            alt="FreeLakito Logo" 
+            style={{ height: 42, width: 'auto' }} 
+          />
         </button>
         <div className="fl-nav-desktop" style={{ display: 'flex', gap: 4 }}>
           {links.map(l => (
