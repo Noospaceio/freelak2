@@ -9,8 +9,8 @@ const TOTAL_SUPPLY   = '22,222';
 const CONTRACT_ADDR  = 'J1fL9JCSczPdRqcsAEkxUdB8Npx8cAuJsbZdwR74zmtG';
 const BUY_LINK       = `https://jup.ag/swap/SOL-${CONTRACT_ADDR}`;
 const DEXSCREENER    = `https://dexscreener.com/solana/${CONTRACT_ADDR}`;
-const X_LINK         = 'https://x.com/FREELAKITO';
-const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
+const X_LINK         = 'https://x.com/freelakito';
+const TG_LINK        = 'https://t.me/freelakito';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
 const SHIRT_PRICE_EUR = 25;          // Basispreis pro Shirt
@@ -404,6 +404,108 @@ function Merch() {
   );
 }
 
+// ── Get Help ─────────────────────────────────────────────────────────────────
+const HELP_CONTENT = {
+  en: {
+    eyebrow: 'NOT ALONE',
+    title: 'Need help?',
+    intro: "If you're facing legal trouble over cannabis, you're not alone. These are real organizations that can help — this is not legal advice, just pointers to people who actually can give it.",
+    resources: [
+      {
+        name: 'Grüne Hilfe Netzwerk e.V.',
+        desc: 'National self-help network for cannabis & law — including support for people currently incarcerated.',
+        contact: 'berlin@gruene-hilfe.de · 030 2424827',
+        link: 'https://www.gruene-hilfe.de/',
+      },
+      {
+        name: 'Deutscher Hanfverband (DHV)',
+        desc: 'Free initial legal consultation with a lawyer for supporters, arranged through their contact form.',
+        contact: 'kontakt@hanfverband.de',
+        link: 'https://hanfverband.de/hanfverband/kontakt',
+      },
+      {
+        name: 'Hanf Museum Berlin',
+        desc: 'Free in-person legal consultation with a defense lawyer, every Thursday 6–8pm. Berlin only, registration required.',
+        contact: 'berlin@gruene-hilfe.de · 030 2424827',
+        link: 'https://www.hanfmuseum.de/hanf-rechtsberatung-im-hanf-museum-berlin',
+      },
+    ],
+    disclaimer: 'This is not legal advice. Always verify current contact details before relying on them.',
+  },
+  de: {
+    eyebrow: 'NICHT ALLEIN',
+    title: 'Brauchst du Hilfe?',
+    intro: 'Wenn du selbst Ärger mit dem BtMG hast, bist du nicht allein. Das sind echte Anlaufstellen, die helfen können — keine Rechtsberatung, nur Vermittlung an Leute, die das wirklich dürfen.',
+    resources: [
+      {
+        name: 'Grüne Hilfe Netzwerk e.V.',
+        desc: 'Bundesweites Selbsthilfenetzwerk zu Cannabis & Recht — inklusive Gefangenenbetreuung für Menschen, die aktuell im Vollzug sitzen.',
+        contact: 'berlin@gruene-hilfe.de · 030 2424827',
+        link: 'https://www.gruene-hilfe.de/',
+      },
+      {
+        name: 'Deutscher Hanfverband (DHV)',
+        desc: 'Kostenlose Erstberatung mit einem Anwalt für Unterstützer, vermittelt über das Kontaktformular.',
+        contact: 'kontakt@hanfverband.de',
+        link: 'https://hanfverband.de/hanfverband/kontakt',
+      },
+      {
+        name: 'Hanf Museum Berlin',
+        desc: 'Kostenlose Rechtsberatung vor Ort durch einen Strafverteidiger, jeden Donnerstag 18–20 Uhr. Nur Berlin, Anmeldung nötig.',
+        contact: 'berlin@gruene-hilfe.de · 030 2424827',
+        link: 'https://www.hanfmuseum.de/hanf-rechtsberatung-im-hanf-museum-berlin',
+      },
+    ],
+    disclaimer: 'Das ist keine Rechtsberatung. Bitte aktuelle Kontaktdaten vor Verlass immer selbst prüfen.',
+  },
+};
+
+function GetHelp() {
+  const [lang, setLang] = useState<'en' | 'de'>('en');
+  const t = HELP_CONTENT[lang];
+
+  return (
+    <div style={{ maxWidth: 760, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+        {(['en', 'de'] as const).map(l => (
+          <button key={l} onClick={() => setLang(l)} style={{
+            padding: '6px 16px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+            border: `1px solid ${lang === l ? '#3ecf6a' : 'rgba(255,255,255,0.15)'}`,
+            background: lang === l ? 'rgba(62,207,106,0.12)' : 'transparent',
+            color: lang === l ? '#3ecf6a' : '#888',
+          }}>{l.toUpperCase()}</button>
+        ))}
+      </div>
+
+      <div style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.3em', color: '#d4af37', marginBottom: 14, textAlign: 'center' }}>
+        {t.eyebrow}
+      </div>
+      <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16, textAlign: 'center' }}>{t.title}</h2>
+      <p style={{ color: '#999', fontSize: 14, lineHeight: 1.7, textAlign: 'center', maxWidth: 560, margin: '0 auto 30px' }}>
+        {t.intro}
+      </p>
+
+      <div style={{ display: 'grid', gap: 14 }}>
+        {t.resources.map(r => (
+          <a key={r.name} href={r.link} target="_blank" rel="noreferrer" style={{
+            display: 'block', textDecoration: 'none', color: 'inherit',
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)',
+            borderRadius: 14, padding: '18px 20px',
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: 6 }}>{r.name}</div>
+            <div style={{ fontSize: 13, color: '#999', lineHeight: 1.6, marginBottom: 8 }}>{r.desc}</div>
+            <div style={{ fontSize: 12, color: '#3ecf6a', fontFamily: 'monospace' }}>{r.contact}</div>
+          </a>
+        ))}
+      </div>
+
+      <p style={{ fontSize: 11, color: '#555', textAlign: 'center', marginTop: 22, lineHeight: 1.6 }}>
+        {t.disclaimer}
+      </p>
+    </div>
+  );
+}
+
 // ── Nav ─────────────────────────────────────────────────────────────────────
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -418,6 +520,7 @@ function Nav() {
     { id: 'tokenomics', label: 'Tokenomics' },
     { id: 'merch', label: 'Merch' },
     { id: 'buy', label: 'Buy' },
+    { id: 'help', label: 'Help' },
   ];
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -682,6 +785,10 @@ export default function FreeLakito() {
               color: '#04220f', fontWeight: 800, padding: '15px 40px', borderRadius: 999, textDecoration: 'none', fontSize: 17 }}>
             Buy {TICKER} on Jupiter →
           </motion.a>
+        </motion.section>
+
+        <motion.section id="help" {...fadeUp} style={{ padding: '70px 24px' }}>
+          <GetHelp />
         </motion.section>
 
         <footer style={{ textAlign: 'center', padding: '50px 20px 40px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
