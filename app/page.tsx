@@ -168,7 +168,7 @@ function Merch() {
   const [shipping, setShipping] = useState<'national' | 'eu' | 'worldwide'>('national');
   const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '', paysafecardCode: '' });
   const [submitting, setSubmitting] = useState(false);
-  const [orderResult, setOrderResult] = useState<{ ref: string } | null>(null);
+  const [orderResult, setOrderResult] = useState<{ ref: string; total: number; totalSol: string } | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -240,7 +240,7 @@ function Merch() {
         });
         if (dbError) throw dbError;
       }
-      setOrderResult({ ref });
+      setOrderResult({ ref, total, totalSol });
       setCart([]);
     } catch (e) {
       setError(lang === 'de'
@@ -263,7 +263,7 @@ function Merch() {
 
         {payment === 'paysafecard' && (
           <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
-            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{total.toFixed(2)}</div>
+            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{orderResult.total.toFixed(2)}</div>
             <div style={{ wordBreak: 'break-all' }}><strong>PaysafeCard-Code:</strong> {form.paysafecardCode}</div>
             <div style={{ color: '#888', marginTop: 8 }}>
               {lang === 'de'
@@ -275,7 +275,7 @@ function Merch() {
 
         {payment === 'btc' && (
           <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
-            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{total.toFixed(2)} {lang === 'de' ? '(in BTC-Gegenwert)' : '(BTC equivalent)'}</div>
+            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{orderResult.total.toFixed(2)} {lang === 'de' ? '(in BTC-Gegenwert)' : '(BTC equivalent)'}</div>
             <div style={{ wordBreak: 'break-all' }}><strong>BTC-{lang === 'de' ? 'Adresse' : 'Address'}:</strong> {BTC_WALLET}</div>
             <div style={{ color: '#888', marginTop: 8 }}>
               {lang === 'de'
@@ -289,7 +289,7 @@ function Merch() {
           <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
             <div><strong>IBAN:</strong> {IBAN}</div>
             <div><strong>{lang === 'de' ? 'Empfänger:' : 'Recipient:'}</strong> {IBAN_HOLDER}</div>
-            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{total.toFixed(2)}</div>
+            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{orderResult.total.toFixed(2)}</div>
             <div><strong>{lang === 'de' ? 'Verwendungszweck:' : 'Reference:'}</strong> {orderResult.ref}</div>
             <div style={{ color: '#888', marginTop: 8 }}>
               {lang === 'de'
@@ -305,7 +305,7 @@ function Merch() {
             <div style={{ wordBreak: 'break-all' }}><strong>{lang === 'de' ? 'Adresse:' : 'Address:'}</strong> {kryptoCoin === 'SOL' ? SOL_WALLET : FREELAK_WALLET}</div>
             {kryptoCoin === 'SOL' && (
               <div>
-                <strong>{lang === 'de' ? 'Ungefährer Betrag:' : 'Approx. amount:'}</strong> ~{totalSol} SOL
+                <strong>{lang === 'de' ? 'Ungefährer Betrag:' : 'Approx. amount:'}</strong> ~{orderResult.totalSol} SOL
                 {lang === 'de' ? ' (Kurs schwankt — aktuellen Preis gerne selbst prüfen)' : ' (rate fluctuates — feel free to double-check the current price)'}
               </div>
             )}
@@ -321,9 +321,9 @@ function Merch() {
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
             <div>
               {lang === 'de' ? (
-                <>Nichts weiter zu tun — du zahlst <strong>€{total.toFixed(2)}</strong> (inkl. €{NACHNAHME_FEE_EUR} Nachnahme-Gebühr) bar an den Boten.</>
+                <>Nichts weiter zu tun — du zahlst <strong>€{orderResult.total.toFixed(2)}</strong> (inkl. €{NACHNAHME_FEE_EUR} Nachnahme-Gebühr) bar an den Boten.</>
               ) : (
-                <>Nothing else to do — you pay <strong>€{total.toFixed(2)}</strong> (incl. €{NACHNAHME_FEE_EUR} COD fee) in cash to the courier.</>
+                <>Nothing else to do — you pay <strong>€{orderResult.total.toFixed(2)}</strong> (incl. €{NACHNAHME_FEE_EUR} COD fee) in cash to the courier.</>
               )}
             </div>
           </div>
