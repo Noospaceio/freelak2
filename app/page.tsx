@@ -15,7 +15,7 @@ const CONTACT_EMAIL  = 'FREELAKITO@proton.me';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
 const SHIRT_PRICE_EUR = 44.99;       // Basispreis pro Shirt
-const HOODIE_PRICE_EUR = 69.99;      // Basispreis pro Hoodie
+const HOODIE_PRICE_EUR = 79.99;      // Basispreis pro Hoodie
 const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme (aktuell inaktiv)
 const SOL_EUR_RATE = 65;             // grober Kurs für Anzeige, KEIN Live-Feed — bei Bedarf anpassen
 const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen (aktuell inaktiv)
