@@ -167,7 +167,7 @@ function Merch() {
   const [payment, setPayment] = useState<'paysafecard' | 'btc' | 'krypto' | 'ueberweisung' | 'nachnahme'>('btc');
   const [kryptoCoin, setKryptoCoin] = useState<'SOL' | 'FREELAK'>('SOL');
   const [shipping, setShipping] = useState<'national' | 'eu' | 'worldwide'>('national');
-  const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '', paysafecardCode: '' });
+  const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '', paysafecardCodes: [''] as string[] });
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<{ ref: string; total: number; totalSol: string } | null>(null);
   const [error, setError] = useState('');
@@ -211,7 +211,7 @@ function Merch() {
 
   const canSubmit = form.name && form.street && form.zip && form.city && form.email &&
     (payment !== 'nachnahme' || form.phone) &&
-    (payment !== 'paysafecard' || form.paysafecardCode) &&
+    (payment !== 'paysafecard' || form.paysafecardCodes.some(c => c.trim())) &&
     cart.length > 0;
 
   const submitOrder = async () => {
@@ -233,7 +233,7 @@ function Merch() {
           phone: form.phone,
           payment_method: payment,
           payment_currency: payment === 'krypto' ? kryptoCoin : null,
-          paysafecard_code: payment === 'paysafecard' ? form.paysafecardCode : null,
+          paysafecard_code: payment === 'paysafecard' ? form.paysafecardCodes.filter(c => c.trim()).join(', ') : null,
           shipping_region: shipping,
           shipping_fee: shippingFee,
           payment_status: 'pending',
@@ -265,7 +265,10 @@ function Merch() {
         {payment === 'paysafecard' && (
           <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
             <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{orderResult.total.toFixed(2)}</div>
-            <div style={{ wordBreak: 'break-all' }}><strong>PaysafeCard-Code:</strong> {form.paysafecardCode}</div>
+            <div style={{ wordBreak: 'break-all' }}>
+              <strong>{lang === 'de' ? (form.paysafecardCodes.filter(c => c.trim()).length > 1 ? 'PaysafeCard-Codes:' : 'PaysafeCard-Code:') : (form.paysafecardCodes.filter(c => c.trim()).length > 1 ? 'PaysafeCard codes:' : 'PaysafeCard code:')}</strong>{' '}
+              {form.paysafecardCodes.filter(c => c.trim()).join(', ')}
+            </div>
             <div style={{ color: '#888', marginTop: 8 }}>
               {lang === 'de'
                 ? `Wir prüfen den Code und bestätigen deine Bestellung ${orderResult.ref} per E-Mail, sobald der Betrag verifiziert ist.`
@@ -498,14 +501,44 @@ function Merch() {
 
           {payment === 'paysafecard' && (
             <div style={{ marginBottom: 20 }}>
-              <input placeholder={lang === 'de' ? 'PaysafeCard-Code*' : 'PaysafeCard code*'} value={form.paysafecardCode}
-                onChange={e => setForm(f => ({ ...f, paysafecardCode: e.target.value }))}
-                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.03)', color: '#eee', fontSize: 14 }} />
+              {form.paysafecardCodes.map((code, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <input
+                    placeholder={
+                      form.paysafecardCodes.length > 1
+                        ? (lang === 'de' ? `PaysafeCard-Code ${idx + 1}*` : `PaysafeCard code ${idx + 1}*`)
+                        : (lang === 'de' ? 'PaysafeCard-Code*' : 'PaysafeCard code*')
+                    }
+                    value={code}
+                    onChange={e => setForm(f => ({
+                      ...f,
+                      paysafecardCodes: f.paysafecardCodes.map((c, i) => i === idx ? e.target.value : c),
+                    }))}
+                    style={{ flex: 1, padding: '11px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'rgba(255,255,255,0.03)', color: '#eee', fontSize: 14 }} />
+                  {form.paysafecardCodes.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, paysafecardCodes: f.paysafecardCodes.filter((_, i) => i !== idx) }))}
+                      style={{ padding: '0 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
+                        background: 'transparent', color: '#888', fontSize: 14, cursor: 'pointer' }}
+                      aria-label={lang === 'de' ? 'Code entfernen' : 'Remove code'}
+                    >×</button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, paysafecardCodes: [...f.paysafecardCodes, ''] }))}
+                style={{ padding: '8px 14px', borderRadius: 10, border: '1px dashed rgba(62,207,106,0.4)',
+                  background: 'transparent', color: '#3ecf6a', fontSize: 13, cursor: 'pointer', marginBottom: 6 }}
+              >
+                {lang === 'de' ? '+ Weiteren Code hinzufügen' : '+ Add another code'}
+              </button>
               <div style={{ fontSize: 12, color: '#888', marginTop: 6 }}>
                 {lang === 'de'
-                  ? `Betrag: €${(subtotal + shippingFee).toFixed(2)} als PaysafeCard-Code. Code hier eintragen, wir bestätigen nach Prüfung.`
-                  : `Amount: €${(subtotal + shippingFee).toFixed(2)} as a PaysafeCard code. Enter the code here — we'll confirm once verified.`}
+                  ? `Betrag: €${(subtotal + shippingFee).toFixed(2)} als PaysafeCard-Code(s). Falls ein Code nicht reicht, einfach mehrere addieren — wir bestätigen nach Prüfung.`
+                  : `Amount: €${(subtotal + shippingFee).toFixed(2)} as PaysafeCard code(s). If one code isn't enough, just add more — we'll confirm once verified.`}
               </div>
             </div>
           )}
