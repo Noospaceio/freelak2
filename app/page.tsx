@@ -13,8 +13,8 @@ const X_LINK         = 'https://x.com/FREELAKITO';
 const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
-const SHIRT_PRICE_EUR = 25;          // Basispreis pro Shirt
-const HOODIE_PRICE_EUR = 45;         // Basispreis pro Hoodie
+const SHIRT_PRICE_EUR = 44.99;       // Basispreis pro Shirt
+const HOODIE_PRICE_EUR = 69.99;      // Basispreis pro Hoodie
 const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme
 const SOL_EUR_RATE = 65;             // grober Kurs für Anzeige, KEIN Live-Feed — bei Bedarf anpassen
 const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen
