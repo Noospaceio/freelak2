@@ -15,12 +15,18 @@ const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
 const SHIRT_PRICE_EUR = 44.99;       // Basispreis pro Shirt
 const HOODIE_PRICE_EUR = 69.99;      // Basispreis pro Hoodie
-const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme
+const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme (aktuell inaktiv)
 const SOL_EUR_RATE = 65;             // grober Kurs für Anzeige, KEIN Live-Feed — bei Bedarf anpassen
-const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen
-const IBAN_HOLDER     = 'Vorname Nachname';             // ← Kontoinhaber eintragen
-const SOL_WALLET      = 'DEINE_SOL_WALLET_ADRESSE';      // ← Treasury-Wallet für SOL-Zahlungen
-const FREELAK_WALLET  = 'DEINE_FREELAK_TOKEN_ADRESSE';   // ← Wallet/Token-Account für $FREELAK-Zahlungen
+const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen (aktuell inaktiv)
+const IBAN_HOLDER     = 'Vorname Nachname';             // ← Kontoinhaber eintragen (aktuell inaktiv)
+const BTC_WALLET      = 'bc1qc0ypgu2ctjap23rc8ec4afj25pyleh6pk92pma'; // ← BTC-Zahladresse
+const SOL_WALLET      = '52Re7asd5AfyA2h6czfiB1LtcX1K31AMsTMyzvjEpSSR'; // ← Solana-Adresse für SOL-Zahlungen
+const FREELAK_WALLET  = '52Re7asd5AfyA2h6czfiB1LtcX1K31AMsTMyzvjEpSSR'; // ← selbe Solana-Adresse, empfängt auch $FREELAK
+
+// ── VERSAND ──────────────────────────────────────────────────────────────────
+const SHIPPING_NATIONAL_EUR    = 5;   // Deutschland
+const SHIPPING_EU_EUR          = 18;  // EU-weit
+const SHIPPING_WORLDWIDE_EUR   = 35;  // Rest der Welt
 
 const SHIRTS = [
   { id: 'shirt-cash', name: 'Cash Out', img: '/merch/shirt-cash.jpg', price: SHIRT_PRICE_EUR, type: 'shirt' },
@@ -157,9 +163,10 @@ function Merch() {
     Object.fromEntries(SHIRTS.map(s => [s.id, { fit: FITS[0], size: 'M' }]))
   );
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [payment, setPayment] = useState<'ueberweisung' | 'krypto' | 'nachnahme'>('ueberweisung');
+  const [payment, setPayment] = useState<'paysafecard' | 'btc' | 'krypto' | 'ueberweisung' | 'nachnahme'>('btc');
   const [kryptoCoin, setKryptoCoin] = useState<'SOL' | 'FREELAK'>('SOL');
-  const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '' });
+  const [shipping, setShipping] = useState<'national' | 'eu' | 'worldwide'>('national');
+  const [form, setForm] = useState({ name: '', street: '', zip: '', city: '', country: 'Deutschland', email: '', phone: '', paysafecardCode: '' });
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<{ ref: string } | null>(null);
   const [error, setError] = useState('');
@@ -197,11 +204,14 @@ function Merch() {
 
   const subtotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   const nachnahmeFee = payment === 'nachnahme' ? NACHNAHME_FEE_EUR : 0;
-  const total = subtotal + nachnahmeFee;
+  const shippingFee = shipping === 'national' ? SHIPPING_NATIONAL_EUR : shipping === 'eu' ? SHIPPING_EU_EUR : SHIPPING_WORLDWIDE_EUR;
+  const total = subtotal + nachnahmeFee + shippingFee;
   const totalSol = (total / SOL_EUR_RATE).toFixed(3);
 
   const canSubmit = form.name && form.street && form.zip && form.city && form.email &&
-    (payment !== 'nachnahme' || form.phone) && cart.length > 0;
+    (payment !== 'nachnahme' || form.phone) &&
+    (payment !== 'paysafecard' || form.paysafecardCode) &&
+    cart.length > 0;
 
   const submitOrder = async () => {
     if (!canSubmit) { setError(lang === 'de' ? 'Bitte fülle alle Pflichtfelder aus.' : 'Please fill in all required fields.'); return; }
@@ -222,6 +232,9 @@ function Merch() {
           phone: form.phone,
           payment_method: payment,
           payment_currency: payment === 'krypto' ? kryptoCoin : null,
+          paysafecard_code: payment === 'paysafecard' ? form.paysafecardCode : null,
+          shipping_region: shipping,
+          shipping_fee: shippingFee,
           payment_status: 'pending',
           total_amount: total,
         });
@@ -248,6 +261,30 @@ function Merch() {
           {lang === 'de' ? 'Eine Bestätigung wird an deine E-Mail gesendet.' : 'A confirmation will be sent to your email.'}
         </p>
 
+        {payment === 'paysafecard' && (
+          <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
+            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{total.toFixed(2)}</div>
+            <div style={{ wordBreak: 'break-all' }}><strong>PaysafeCard-Code:</strong> {form.paysafecardCode}</div>
+            <div style={{ color: '#888', marginTop: 8 }}>
+              {lang === 'de'
+                ? `Wir prüfen den Code und bestätigen deine Bestellung ${orderResult.ref} per E-Mail, sobald der Betrag verifiziert ist.`
+                : `We'll verify the code and confirm your order ${orderResult.ref} by email once the amount checks out.`}
+            </div>
+          </div>
+        )}
+
+        {payment === 'btc' && (
+          <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
+            <div><strong>{lang === 'de' ? 'Betrag:' : 'Amount:'}</strong> €{total.toFixed(2)} {lang === 'de' ? '(in BTC-Gegenwert)' : '(BTC equivalent)'}</div>
+            <div style={{ wordBreak: 'break-all' }}><strong>BTC-{lang === 'de' ? 'Adresse' : 'Address'}:</strong> {BTC_WALLET}</div>
+            <div style={{ color: '#888', marginTop: 8 }}>
+              {lang === 'de'
+                ? `Schick uns nach der Zahlung einen Screenshot mit der Bestellnummer ${orderResult.ref} über X oder Telegram, damit wir sie schnell zuordnen können.`
+                : `After paying, send us a screenshot with order number ${orderResult.ref} via X or Telegram so we can match it quickly.`}
+            </div>
+          </div>
+        )}
+
         {payment === 'ueberweisung' && (
           <div style={{ background: 'rgba(62,207,106,0.05)', border: '1px solid rgba(62,207,106,0.2)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
             <div><strong>IBAN:</strong> {IBAN}</div>
@@ -264,7 +301,7 @@ function Merch() {
 
         {payment === 'krypto' && (
           <div style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 20, textAlign: 'left', fontSize: 13, lineHeight: 1.8 }}>
-            <div><strong>{lang === 'de' ? 'Zahlung in:' : 'Paying in:'}</strong> {kryptoCoin}</div>
+            <div><strong>{lang === 'de' ? 'Zahlung in:' : 'Paying in:'}</strong> {kryptoCoin === 'SOL' ? 'Solana (SOL)' : TICKER}</div>
             <div style={{ wordBreak: 'break-all' }}><strong>{lang === 'de' ? 'Adresse:' : 'Address:'}</strong> {kryptoCoin === 'SOL' ? SOL_WALLET : FREELAK_WALLET}</div>
             {kryptoCoin === 'SOL' && (
               <div>
@@ -388,16 +425,41 @@ function Merch() {
             ))}
           </div>
 
-          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>{lang === 'de' ? 'ZAHLUNGSMETHODE' : 'PAYMENT METHOD'}</div>
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>{lang === 'de' ? 'VERSAND' : 'SHIPPING'}</div>
           <div style={{ display: 'grid', gap: 8, marginBottom: 20 }}>
             {(lang === 'de' ? [
-              { id: 'ueberweisung', label: 'Überweisung (SEPA)' },
-              { id: 'krypto', label: 'Krypto (SOL oder $FREELAK)' },
-              { id: 'nachnahme', label: `Nachnahme (+${NACHNAHME_FEE_EUR}€ Gebühr)` },
+              { id: 'national', label: 'Deutschland', fee: SHIPPING_NATIONAL_EUR },
+              { id: 'eu', label: 'EU-weit', fee: SHIPPING_EU_EUR },
+              { id: 'worldwide', label: 'Weltweit', fee: SHIPPING_WORLDWIDE_EUR },
             ] : [
-              { id: 'ueberweisung', label: 'Bank transfer (SEPA)' },
-              { id: 'krypto', label: 'Crypto (SOL or $FREELAK)' },
-              { id: 'nachnahme', label: `Cash on delivery (+€${NACHNAHME_FEE_EUR} fee)` },
+              { id: 'national', label: 'Germany', fee: SHIPPING_NATIONAL_EUR },
+              { id: 'eu', label: 'EU-wide', fee: SHIPPING_EU_EUR },
+              { id: 'worldwide', label: 'Worldwide', fee: SHIPPING_WORLDWIDE_EUR },
+            ]).map(s => (
+              <label key={s.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
+                border: `1px solid ${shipping === s.id ? '#3ecf6a' : 'rgba(255,255,255,0.12)'}`,
+                background: shipping === s.id ? 'rgba(62,207,106,0.08)' : 'transparent', fontSize: 14,
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <input type="radio" checked={shipping === s.id} onChange={() => setShipping(s.id as any)} />
+                  {s.label}
+                </span>
+                <span style={{ color: '#888', fontSize: 13 }}>+€{s.fee.toFixed(2)}</span>
+              </label>
+            ))}
+          </div>
+
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 13, letterSpacing: '0.05em', color: '#d4af37' }}>{lang === 'de' ? 'ZAHLUNGSMETHODE' : 'PAYMENT METHOD'}</div>
+          <div style={{ display: 'grid', gap: 8, marginBottom: 8 }}>
+            {(lang === 'de' ? [
+              { id: 'paysafecard', label: 'PaysafeCard (Code übermitteln)', active: true },
+              { id: 'btc', label: 'Bitcoin (BTC)', active: true },
+              { id: 'krypto', label: 'Solana (SOL) oder $FREELAK', active: true },
+            ] : [
+              { id: 'paysafecard', label: 'PaysafeCard (submit code)', active: true },
+              { id: 'btc', label: 'Bitcoin (BTC)', active: true },
+              { id: 'krypto', label: 'Solana (SOL) or $FREELAK', active: true },
             ]).map(p => (
               <label key={p.id} style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
@@ -408,7 +470,45 @@ function Merch() {
                 {p.label}
               </label>
             ))}
+
+            {/* Aktuell inaktive Zahlungsmethoden — Code bleibt erhalten, nur zum Reaktivieren `active: true` setzen und aus der Disabled-Liste lösen */}
+            {(lang === 'de' ? [
+              { id: 'ueberweisung', label: 'Überweisung (SEPA)' },
+              { id: 'nachnahme', label: `Nachnahme (+${NACHNAHME_FEE_EUR}€ Gebühr)` },
+            ] : [
+              { id: 'ueberweisung', label: 'Bank transfer (SEPA)' },
+              { id: 'nachnahme', label: `Cash on delivery (+€${NACHNAHME_FEE_EUR} fee)` },
+            ]).map(p => (
+              <label key={p.id} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderRadius: 10, cursor: 'not-allowed',
+                border: '1px solid rgba(255,255,255,0.06)', background: 'transparent', fontSize: 14, color: '#555',
+              }}>
+                <input type="radio" disabled checked={false} />
+                {p.label}
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555' }}>{lang === 'de' ? 'bald verfügbar' : 'coming soon'}</span>
+              </label>
+            ))}
           </div>
+
+          {payment === 'paysafecard' && (
+            <div style={{ marginBottom: 20 }}>
+              <input placeholder={lang === 'de' ? 'PaysafeCard-Code*' : 'PaysafeCard code*'} value={form.paysafecardCode}
+                onChange={e => setForm(f => ({ ...f, paysafecardCode: e.target.value }))}
+                style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.03)', color: '#eee', fontSize: 14 }} />
+              <div style={{ fontSize: 12, color: '#888', marginTop: 6 }}>
+                {lang === 'de'
+                  ? `Betrag: €${(subtotal + shippingFee).toFixed(2)} als PaysafeCard-Code. Code hier eintragen, wir bestätigen nach Prüfung.`
+                  : `Amount: €${(subtotal + shippingFee).toFixed(2)} as a PaysafeCard code. Enter the code here — we'll confirm once verified.`}
+              </div>
+            </div>
+          )}
+
+          {payment === 'btc' && (
+            <div style={{ marginBottom: 20, fontSize: 12, color: '#888', background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 10, padding: '11px 14px' }}>
+              {lang === 'de' ? 'BTC-Adresse: ' : 'BTC address: '}<span style={{ color: '#d4af37', wordBreak: 'break-all' }}>{BTC_WALLET}</span>
+            </div>
+          )}
 
           {payment === 'krypto' && (
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
@@ -426,6 +526,9 @@ function Merch() {
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 14, marginBottom: 18 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
               <span>{lang === 'de' ? 'Zwischensumme' : 'Subtotal'}</span><span>€{subtotal.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
+              <span>{lang === 'de' ? 'Versand' : 'Shipping'}</span><span>+€{shippingFee.toFixed(2)}</span>
             </div>
             {payment === 'nachnahme' && (
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#999', marginBottom: 4 }}>
