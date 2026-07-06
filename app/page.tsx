@@ -14,6 +14,7 @@ const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
 const SHIRT_PRICE_EUR = 25;          // Basispreis pro Shirt
+const HOODIE_PRICE_EUR = 45;         // Basispreis pro Hoodie
 const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme
 const SOL_EUR_RATE = 65;             // grober Kurs für Anzeige, KEIN Live-Feed — bei Bedarf anpassen
 const IBAN           = 'DE00 0000 0000 0000 0000 00'; // ← eintragen
@@ -22,10 +23,11 @@ const SOL_WALLET      = 'DEINE_SOL_WALLET_ADRESSE';      // ← Treasury-Wallet 
 const FREELAK_WALLET  = 'DEINE_FREELAK_TOKEN_ADRESSE';   // ← Wallet/Token-Account für $FREELAK-Zahlungen
 
 const SHIRTS = [
-  { id: 'shirt-1', name: 'Prison Break', img: '/merch/shirt-1.png', price: SHIRT_PRICE_EUR },
-  { id: 'shirt-2', name: 'Free the Plant', img: '/merch/shirt-2.png', price: SHIRT_PRICE_EUR },
-  { id: 'shirt-3', name: 'Mycelial Network', img: '/merch/shirt-3.png', price: SHIRT_PRICE_EUR },
-  { id: 'shirt-4', name: 'Sacred Rebellion', img: '/merch/shirt-4.png', price: SHIRT_PRICE_EUR },
+  { id: 'shirt-cash', name: 'Cash Out', img: '/merch/shirt-cash.jpg', price: SHIRT_PRICE_EUR, type: 'shirt' },
+  { id: 'hoodie-openprison', name: 'Open Prison', img: '/merch/hoodie-openprison.jpg', price: HOODIE_PRICE_EUR, type: 'hoodie' },
+  { id: 'shirt-community', name: 'Community Protects Its Own', img: '/merch/shirt-community.jpg', price: SHIRT_PRICE_EUR, type: 'shirt' },
+  { id: 'hoodie-xyz', name: 'Freelakito Tag', img: '/merch/hoodie-xyz.jpg', price: HOODIE_PRICE_EUR, type: 'hoodie' },
+  { id: 'shirt-tag', name: 'Hashtag Freelak', img: '/merch/shirt-tag.jpg', price: SHIRT_PRICE_EUR, type: 'shirt' },
 ];
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
@@ -302,8 +304,15 @@ function Merch() {
               const sel = selections[shirt.id];
               return (
                 <div key={shirt.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,175,55,0.15)', borderRadius: 16, padding: 16 }}>
-                  <div style={{ width: '100%', aspectRatio: '1', background: 'rgba(255,255,255,0.04)', borderRadius: 10, marginBottom: 12, overflow: 'hidden' }}>
+                  <div style={{ width: '100%', aspectRatio: '1', background: 'rgba(255,255,255,0.04)', borderRadius: 10, marginBottom: 12, overflow: 'hidden', position: 'relative' }}>
                     <img src={shirt.img} alt={shirt.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{
+                      position: 'absolute', top: 8, left: 8, padding: '3px 9px', borderRadius: 999,
+                      fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                      background: 'rgba(6,10,6,0.75)', border: '1px solid rgba(212,175,55,0.4)', color: '#d4af37',
+                    }}>
+                      {shirt.type === 'hoodie' ? (lang === 'de' ? 'Hoodie' : 'Hoodie') : (lang === 'de' ? 'Shirt' : 'Shirt')}
+                    </span>
                   </div>
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>{shirt.name}</div>
                   <div style={{ color: '#3ecf6a', fontFamily: 'monospace', fontWeight: 700, marginBottom: 12 }}>{shirt.price}€</div>
