@@ -11,6 +11,7 @@ const BUY_LINK       = `https://jup.ag/swap/SOL-${CONTRACT_ADDR}`;
 const DEXSCREENER    = `https://dexscreener.com/solana/${CONTRACT_ADDR}`;
 const X_LINK         = 'https://x.com/FREELAKITO';
 const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
+const CONTACT_EMAIL  = 'FREELAKITO@proton.me';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
 const SHIRT_PRICE_EUR = 44.99;       // Basispreis pro Shirt
@@ -328,6 +329,11 @@ function Merch() {
             </div>
           </div>
         )}
+
+        <p style={{ fontSize: 12, color: '#888', marginTop: 20 }}>
+          {lang === 'de' ? 'Fragen oder stornieren? Schreib uns: ' : 'Questions or want to cancel? Email us: '}
+          <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#3ecf6a', textDecoration: 'none' }}>{CONTACT_EMAIL}</a>
+        </p>
       </div>
     );
   }
