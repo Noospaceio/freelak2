@@ -14,6 +14,7 @@ const TG_LINK        = 'https://t.me/+6M70BvHV8ywxOTgy';
 const CONTACT_EMAIL  = 'FREELAKITO@proton.me';
 
 // ── MERCH / SHOP CONFIG ─────────────────────────────────────────────────────
+const MERCH_COMING_SOON = true;      // ← auf false setzen, sobald Rechtsform steht und Shop live gehen soll
 const SHIRT_PRICE_EUR = 44.99;       // Basispreis pro Shirt
 const HOODIE_PRICE_EUR = 79.99;      // Basispreis pro Hoodie
 const NACHNAHME_FEE_EUR = 10;        // Aufschlag bei Nachnahme (aktuell inaktiv)
@@ -184,6 +185,26 @@ function Merch() {
     }
     prevCartLen.current = cart.length;
   }, [cart]);
+
+  if (MERCH_COMING_SOON) {
+    return (
+      <div style={{ maxWidth: 560, margin: '0 auto', textAlign: 'center', padding: '20px 24px' }}>
+        <div style={{ fontSize: 40, marginBottom: 14 }}>🧵</div>
+        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 10 }}>
+          {lang === 'de' ? 'Bald verfügbar' : 'Coming soon'}
+        </h3>
+        <p style={{ color: '#aaa', lineHeight: 1.7, marginBottom: 6 }}>
+          {lang === 'de'
+            ? 'Der Merch-Shop wird gerade vorbereitet und geht bald live. Schau bald wieder vorbei!'
+            : 'The merch shop is being set up and will go live soon. Check back shortly!'}
+        </p>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 22 }}>
+          <a href={X_LINK} target="_blank" rel="noreferrer" style={{ color: '#3ecf6a', textDecoration: 'none', fontFamily: 'monospace', fontSize: 13 }}>X / Twitter</a>
+          <a href={TG_LINK} target="_blank" rel="noreferrer" style={{ color: '#3ecf6a', textDecoration: 'none', fontFamily: 'monospace', fontSize: 13 }}>Telegram</a>
+        </div>
+      </div>
+    );
+  }
 
   const updateSelection = (id: string, patch: Partial<{ fit: string; size: string }>) =>
     setSelections(s => ({ ...s, [id]: { ...s[id], ...patch } }));
